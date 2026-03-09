@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "figma-to-code": {
+      "command": "npx",
+      "args": ["tsx", "mcp-server/src/index.ts"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "",
+        "OUTPUT_DIR": "./generated",
+        "STYLE_SYSTEM": "tailwind"
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--headless"],
+      "env": {}
+    }
+  }
+}
