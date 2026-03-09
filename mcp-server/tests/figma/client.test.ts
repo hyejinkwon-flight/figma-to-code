@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { FigmaClient } from '../../src/figma/client.js';
 
 describe('FigmaClient', () => {
@@ -6,7 +6,7 @@ describe('FigmaClient', () => {
 
   beforeEach(() => {
     client = new FigmaClient('test-token');
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('토큰 없이 생성하면 에러를 던진다', () => {
@@ -15,7 +15,7 @@ describe('FigmaClient', () => {
 
   it('getFile - 성공 시 파일 데이터를 반환한다', async () => {
     const mockData = { name: 'Test File', document: { id: '0:0', name: 'Document', type: 'DOCUMENT', children: [] }, components: {}, styles: {} };
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockData),
     } as Response);
@@ -29,7 +29,7 @@ describe('FigmaClient', () => {
   });
 
   it('getFile - options를 쿼리 파라미터로 전달한다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({}),
     } as Response);
@@ -42,7 +42,7 @@ describe('FigmaClient', () => {
   });
 
   it('getFile - API 에러 시 예외를 던진다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       status: 403,
       text: () => Promise.resolve('Forbidden'),
@@ -52,7 +52,7 @@ describe('FigmaClient', () => {
   });
 
   it('getFile - text() 실패 시에도 에러 메시지를 반환한다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       status: 500,
       text: () => Promise.reject(new Error('parse fail')),
@@ -62,7 +62,7 @@ describe('FigmaClient', () => {
   });
 
   it('getFileNodes - 노드 데이터를 반환한다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ nodes: {} }),
     } as Response);
@@ -81,7 +81,7 @@ describe('FigmaClient', () => {
 
   it('getImages - 이미지 URL 맵을 반환한다', async () => {
     const mockImages = { '1:1': 'https://img.url/1.png' };
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ images: mockImages }),
     } as Response);
@@ -91,7 +91,7 @@ describe('FigmaClient', () => {
   });
 
   it('getImages - 옵션을 전달한다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ images: {} }),
     } as Response);
@@ -108,7 +108,7 @@ describe('FigmaClient', () => {
   });
 
   it('getComponents - 컴포넌트 목록을 반환한다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ meta: { components: [] } }),
     } as Response);
@@ -118,7 +118,7 @@ describe('FigmaClient', () => {
   });
 
   it('getComponentSets - 컴포넌트 세트 목록을 반환한다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ meta: { component_sets: [] } }),
     } as Response);
@@ -128,7 +128,7 @@ describe('FigmaClient', () => {
   });
 
   it('getStyles - 스타일 목록을 반환한다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ meta: { styles: [] } }),
     } as Response);

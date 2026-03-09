@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, jest } from '@jest/globals';
 import { executePipelineIteration, executeFullPipeline } from '../../src/tools/run-full-pipeline.js';
 import { FigmaClient } from '../../src/figma/client.js';
 
@@ -40,7 +40,7 @@ function mockFileResponse() {
 describe('executePipelineIteration', () => {
   it('컴포넌트 노드를 찾아서 생성한다 (깊이 탐색)', async () => {
     const client = new FigmaClient('test');
-    vi.spyOn(client, 'getFile').mockResolvedValue({
+    jest.spyOn(client, 'getFile').mockResolvedValue({
       name: 'Deep',
       document: {
         id: '0:0', name: 'D', type: 'DOCUMENT',
@@ -66,7 +66,7 @@ describe('executePipelineIteration', () => {
 
   it('존재하지 않는 nodeId의 후보는 건너뛴다', async () => {
     const client = new FigmaClient('test');
-    vi.spyOn(client, 'getFile').mockResolvedValue({
+    jest.spyOn(client, 'getFile').mockResolvedValue({
       name: 'T', document: { id: '0:0', name: 'D', type: 'DOCUMENT', children: [] },
       components: {}, styles: {},
     });
@@ -77,7 +77,7 @@ describe('executePipelineIteration', () => {
 
   it('다중 페이지에서 노드를 찾는다 (findNodeById 다중 레이어)', async () => {
     const client = new FigmaClient('test');
-    vi.spyOn(client, 'getFile').mockResolvedValue({
+    jest.spyOn(client, 'getFile').mockResolvedValue({
       name: 'Multi',
       document: {
         id: '0:0', name: 'D', type: 'DOCUMENT',
@@ -107,7 +107,7 @@ describe('executePipelineIteration', () => {
 
   it('여러 레이어가 있는 페이지에서 searchNode가 두 번째 레이어를 탐색한다', async () => {
     const client = new FigmaClient('test');
-    vi.spyOn(client, 'getFile').mockResolvedValue({
+    jest.spyOn(client, 'getFile').mockResolvedValue({
       name: 'TwoLayers',
       document: {
         id: '0:0', name: 'D', type: 'DOCUMENT',
@@ -128,7 +128,7 @@ describe('executePipelineIteration', () => {
 
   it('파이프라인 1회 반복을 실행한다', async () => {
     const client = new FigmaClient('test');
-    vi.spyOn(client, 'getFile').mockResolvedValue(mockFileResponse());
+    jest.spyOn(client, 'getFile').mockResolvedValue(mockFileResponse());
 
     const state = await executePipelineIteration(client, {
       fileKey: 'abc',
@@ -144,7 +144,7 @@ describe('executePipelineIteration', () => {
 
   it('빈 파일 데이터도 처리한다', async () => {
     const client = new FigmaClient('test');
-    vi.spyOn(client, 'getFile').mockResolvedValue({
+    jest.spyOn(client, 'getFile').mockResolvedValue({
       name: 'Empty',
       document: { id: '0:0', name: 'D', type: 'DOCUMENT', children: [] },
       components: {},
@@ -166,8 +166,8 @@ describe('executePipelineIteration', () => {
 describe('executeFullPipeline', () => {
   it('목표 커버리지에 도달하면 반복을 멈춘다', async () => {
     const client = new FigmaClient('test');
-    vi.spyOn(client, 'getFile').mockResolvedValue(mockFileResponse());
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(client, 'getFile').mockResolvedValue(mockFileResponse());
+    jest.spyOn(console, 'log').mockImplementation(() => {});
 
     const result = await executeFullPipeline(client, {
       fileKey: 'abc',
@@ -179,14 +179,14 @@ describe('executeFullPipeline', () => {
     // targetCoverage=0이므로 1회 반복 후 종료
     expect(result.iterations).toBe(1);
 
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('maxIterations에 도달하면 멈춘다', async () => {
     const client = new FigmaClient('test');
     // 커버리지가 낮게 나오도록 설정 (빈 파일이지만 타겟이 높음)
-    vi.spyOn(client, 'getFile').mockResolvedValue(mockFileResponse());
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(client, 'getFile').mockResolvedValue(mockFileResponse());
+    jest.spyOn(console, 'log').mockImplementation(() => {});
 
     const result = await executeFullPipeline(client, {
       fileKey: 'abc',
@@ -197,18 +197,18 @@ describe('executeFullPipeline', () => {
 
     expect(result.iterations).toBeLessThanOrEqual(2);
 
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('기본값을 사용한다 (targetCoverage=99, maxIterations=5)', async () => {
     const client = new FigmaClient('test');
-    vi.spyOn(client, 'getFile').mockResolvedValue({
+    jest.spyOn(client, 'getFile').mockResolvedValue({
       name: 'E',
       document: { id: '0:0', name: 'D', type: 'DOCUMENT', children: [] },
       components: {},
       styles: {},
     });
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
 
     const result = await executeFullPipeline(client, {
       fileKey: 'abc',
@@ -218,6 +218,6 @@ describe('executeFullPipeline', () => {
     // 빈 파일 = 요소 0개 = accuracy 0% → passed=false (v2: 실제 검증 필요)
     expect(typeof result.passed).toBe('boolean');
 
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 });

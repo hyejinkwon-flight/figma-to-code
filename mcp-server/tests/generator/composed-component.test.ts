@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { generateComponent } from '../../src/generator/component-generator.js';
 import type { ExtractedNode, ComponentRegistryEntry, WrapperPatternInfo, GenerateOptions } from '../../src/types.js';
 

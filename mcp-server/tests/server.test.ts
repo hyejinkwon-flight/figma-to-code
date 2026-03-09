@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, jest } from '@jest/globals';
 import { getToolDefinitions, handleToolCall, type ServerConfig } from '../src/server.js';
 
 const config: ServerConfig = {
@@ -11,7 +11,7 @@ const config: ServerConfig = {
 describe('getToolDefinitions', () => {
   it('모든 Tool 정의를 반환한다', () => {
     const tools = getToolDefinitions();
-    expect(tools.length).toBe(10);
+    expect(tools.length).toBe(11);
 
     const names = tools.map(t => t.name);
     expect(names).toContain('extract_layers');
@@ -23,6 +23,7 @@ describe('getToolDefinitions', () => {
     expect(names).toContain('verify_assets');
     expect(names).toContain('calculate_coverage');
     expect(names).toContain('cleanup_verification');
+    expect(names).toContain('lint_generated_code');
     expect(names).toContain('run_full_pipeline');
   });
 
@@ -122,7 +123,7 @@ describe('handleToolCall', () => {
   });
 
   it('run_full_pipeline을 실행한다', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({
         name: 'File',
@@ -137,7 +138,7 @@ describe('handleToolCall', () => {
         styles: {},
       }),
     } as Response);
-    vi.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
 
     const result = await handleToolCall('run_full_pipeline', {
       file_key: 'abc',
@@ -150,6 +151,6 @@ describe('handleToolCall', () => {
     expect(typed.iterations).toBe(1);
     expect(typeof typed.passed).toBe('boolean');
 
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 });

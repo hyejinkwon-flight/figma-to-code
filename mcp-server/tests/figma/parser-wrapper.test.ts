@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { detectWrapperPattern, identifyComponents } from '../../src/figma/parser.js';
 import type { ExtractedNode, FigmaFileData } from '../../src/types.js';
 

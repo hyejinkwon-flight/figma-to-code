@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { extractVariants, generateStory, generatePageStory } from '../../src/generator/story-generator.js';
 import type { ExtractedNode, GeneratedComponent } from '../../src/types.js';
 

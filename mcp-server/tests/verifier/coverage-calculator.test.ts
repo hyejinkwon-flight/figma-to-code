@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { calculateCoverage, formatCoverageReport } from '../../src/verifier/coverage-calculator.js';
 import type { PixelDiffResult, ElementVerificationReport, AssetVerificationReport } from '../../src/types.js';
 

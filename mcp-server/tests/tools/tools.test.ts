@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, jest } from '@jest/globals';
 import { executeExtractLayers } from '../../src/tools/extract-layers.js';
 import { executeAnalyzeTree } from '../../src/tools/analyze-tree.js';
 import { executeGenerateComponent } from '../../src/tools/generate-component.js';
@@ -24,7 +24,7 @@ function createNode(overrides: Partial<ExtractedNode> = {}): ExtractedNode {
 describe('executeExtractLayers', () => {
   it('Figma 파일에서 레이어를 추출한다', async () => {
     const client = new FigmaClient('test-token');
-    vi.spyOn(client, 'getFile').mockResolvedValue({
+    jest.spyOn(client, 'getFile').mockResolvedValue({
       name: 'Test',
       document: {
         id: '0:0', name: 'Document', type: 'DOCUMENT',

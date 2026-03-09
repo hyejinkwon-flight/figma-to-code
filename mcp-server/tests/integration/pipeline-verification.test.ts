@@ -4,7 +4,7 @@
  * Figma MCP에서 추출한 실제 디자인 데이터를 기반으로
  * 새로운 검증 파이프라인(픽셀 diff + 요소별 9항목 + 에셋)을 테스트합니다.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { traverseNode, countNodes } from '../../src/figma/traverser.js';
 import { verifyAllElements, type VerifyElement } from '../../src/verifier/element-verifier.js';
 import { verifyAllAssets, type AssetToVerify } from '../../src/verifier/asset-verifier.js';

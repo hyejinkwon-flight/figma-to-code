@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from '@jest/globals';
 import { traverseNode, extractAllPages, countNodes } from '../../src/figma/traverser.js';
 import type { FigmaAPINode, FigmaFileResponse } from '../../src/types.js';
 
