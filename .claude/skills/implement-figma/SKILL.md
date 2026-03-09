@@ -1,6 +1,6 @@
 ---
 name: implement-figma
-description: Figma 링크에서 디자인을 구현합니다
+description: figma-targets.md 기반으로 Figma 디자인을 React 코드로 구현합니다. Use when user says "/implement-figma", "피그마 구현", "디자인 구현해줘", "figma-targets 실행", or wants to run the full Figma-to-code pipeline with component matching, manifest generation, and parallel agent execution. Requires figma-targets.md in project root.
 ---
 
 # Figma 디자인 구현 스킬

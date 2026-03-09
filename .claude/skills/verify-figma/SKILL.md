@@ -1,6 +1,6 @@
 ---
 name: verify-figma
-description: Figma 디자인 구현 결과를 렌더링 기반으로 검증하고 자동 수정합니다
+description: Figma 디자인 구현 결과를 렌더링 기반으로 검증하고 99% 정확도까지 자동 수정합니다. Use when user says "/verify-figma", "검증해줘", "피그마 비교", "디자인 확인", "pixel diff", or wants to verify implemented code against Figma original using screenshot comparison and element-level verification. Requires Playwright MCP.
 ---
 
 # Figma 디자인 검증 스킬 (v2)
