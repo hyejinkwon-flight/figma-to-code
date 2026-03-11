@@ -161,7 +161,18 @@ TEXT 노드의 `fills` 속성이 텍스트 색상이다. `fontSize`, `fontWeight
 
 ### 이미지 / 배경
 
-IMAGE fill이 있는 노드는 Figma REST API `getImages(fileKey, nodeIds, { format: 'png' })`로 export하여 프로젝트 에셋 디렉토리에 저장한다. 외부 URL(`unsplash`, `placeholder.com`)이나 빈 div placeholder를 사용하지 않는다.
+IMAGE fill이 있는 노드는 figma-to-code MCP의 **`export_images` 도구**를 사용하여 export한다. 이 도구는 Figma REST API로 PNG export → 바이너리 다운로드 → 파일 저장을 한 번에 수행하며, `scaleMode` 정보도 함께 반환한다.
+
+```json
+{
+  "file_key": "{fileKey}",
+  "node_ids": ["{IMAGE fill nodeId들}"],
+  "output_dir": "{config.md의 assets 경로}/images",
+  "scale": 2
+}
+```
+
+⛔ 외부 URL(`unsplash`, `placeholder.com`)이나 빈 div placeholder를 사용하지 않는다 — `export_images`가 실패하면 원인을 확인하고 재시도한다.
 
 ### 색상 / 배경 / opacity
 

@@ -19,6 +19,7 @@ import {
   executeLintGeneratedCode,
 } from './tools/verify-all.js';
 import { runFullPipelineToolDef, executeFullPipeline } from './tools/run-full-pipeline.js';
+import { exportImagesToolDef, executeExportImages, type ExportImagesInput } from './tools/export-images.js';
 import type { VerifyElement } from './verifier/element-verifier.js';
 import type { AssetToVerify } from './verifier/asset-verifier.js';
 import type { PixelDiffResult, ElementVerificationReport, AssetVerificationReport } from './types.js';
@@ -44,6 +45,7 @@ export function getToolDefinitions() {
     cleanupVerificationToolDef,
     lintGeneratedCodeToolDef,
     runFullPipelineToolDef,
+    exportImagesToolDef,
   ];
 }
 
@@ -112,6 +114,9 @@ export async function handleToolCall(
         args.file_paths as string[],
         args.svg_checks as Array<{ svg_file_path: string; code_file_path: string; import_name: string }> | undefined
       );
+
+    case 'export_images':
+      return executeExportImages(args as unknown as ExportImagesInput, client);
 
     case 'run_full_pipeline': {
       const registry = args.component_registry as import('./types.js').ComponentRegistryEntry[] | undefined;

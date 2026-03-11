@@ -142,9 +142,30 @@ mkdir -p /tmp/figma-verify
 
 ```
 캐시 확인: /tmp/figma-cache/{fileKey}/screenshots/{nodeId}.png
-  ├─ 존재 → 캐시에서 복사: cp → /tmp/figma-verify/figma-{nodeId}-r{round}.png
-  └─ 미존재 → Figma MCP get_screenshot 호출 → 캐시 + verify 디렉토리에 모두 저장
+  ├─ 존재 + PNG 검증 통과 → 캐시에서 복사: cp → /tmp/figma-verify/figma-{nodeId}-r{round}.png
+  └─ 미존재 또는 PNG 아님 → Figma MCP get_screenshot 호출 → 아래 저장 절차 수행
 ```
+
+#### ⚠️ get_screenshot 결과 저장 방법
+
+`get_screenshot`은 base64 인코딩된 이미지를 반환한다. **응답 객체를 그대로 파일에 쓰면 JSON 텍스트가 저장되므로 반드시 아래 절차를 따른다:**
+
+1. `get_screenshot` 호출 → 응답에서 base64 이미지 데이터 추출
+2. base64 디코딩하여 바이너리 PNG로 저장:
+```bash
+# 캐시에 저장
+echo "<base64_data>" | base64 -d > /tmp/figma-cache/{fileKey}/screenshots/{nodeId}.png
+# verify 디렉토리에도 저장
+cp /tmp/figma-cache/{fileKey}/screenshots/{nodeId}.png /tmp/figma-verify/figma-{nodeId}-r{round}.png
+```
+3. 저장 후 파일 형식 검증:
+```bash
+file /tmp/figma-cache/{fileKey}/screenshots/{nodeId}.png
+# 정상: PNG image data, ...
+# 비정상: JSON data, ASCII text 등 → 저장 실패, 다시 시도
+```
+
+⛔ `file` 결과가 `PNG image data`가 아니면 저장에 실패한 것이다. 캐시 파일을 삭제하고 재시도한다.
 
 ⛔ **라운드 2+ 에서는 Figma 스크린샷을 다시 호출하지 않는다.** 라운드 1의 Figma 스크린샷을 재사용한다.
 (`/tmp/figma-verify/figma-{nodeId}-r1.png`을 이후 라운드에서도 참조)
@@ -343,7 +364,15 @@ figma-to-code MCP `calculate_coverage` 호출:
    - size 불일치 → 아이콘 노드의 `width/height` 확인 → `w-[값] h-[값]` 수정
    - opacity 미적용 → 아이콘 노드의 `opacity` 확인 → `opacity-[값]` 추가
    - 잘못된 import 방식 → SVG fill 속성에 따라 `<img>` vs 인라인 vs React 컴포넌트 변경 (rules.md 참조)
-9. **이미지** → IMAGE fill 노드의 이미지 파일 export + `scaleMode` → `object-fit` 적용
+9. **이미지** (IMAGE fill) → 아래 순서로 수정:
+   - 이미지 미다운로드 → figma-to-code MCP `export_images` 도구 호출:
+     ```json
+     { "file_key": "{fileKey}", "node_ids": ["{누락된 IMAGE fill nodeId}"], "output_dir": "{에셋 경로}/images" }
+     ```
+   - 이미지 파일은 있지만 코드에서 미참조 → `<img src={...}>` 추가
+   - `scaleMode` 미적용 → `export_images` 반환값의 `scaleMode` 확인 → `object-fit` 매핑 (FILL→cover, FIT→contain, CROP→cover+position)
+   - 이미지 크기 불일치 → 노드의 `width/height` 확인 → `w-[값] h-[값]` 수정
+   - alt 속성 누락 → 장식용: `alt="" aria-hidden="true"`, 콘텐츠: 의미 있는 alt 텍스트
 10. **토큰 하드코딩** → hex/rgb → Tailwind 토큰 교체
 11. **타입 에러** → TypeScript 타입 검사 에러 수정
 12. **lint 에러** → lint 규칙 위반 수정

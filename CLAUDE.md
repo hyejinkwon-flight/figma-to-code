@@ -95,6 +95,7 @@ figma-to-code/
 | `verify_assets` | 에셋(SVG/이미지) 다운로드 및 참조 검증 |
 | `calculate_coverage` | 픽셀 diff + 요소 검증 + 에셋 검증 → 종합 커버리지 |
 | `cleanup_verification` | 검증 후 임시 스크린샷/diff 파일 정리 |
+| `export_images` | IMAGE fill(사진/배경/일러스트) 노드에서 PNG export → 바이너리 다운로드 → 파일 저장 |
 | `run_full_pipeline` | 전체 파이프라인 (추출→분석→생성→검증, 99% 커버리지까지 반복) |
 
 ## 스킬 파이프라인

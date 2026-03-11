@@ -22,6 +22,12 @@ export interface Paint {
   visible?: boolean;
   opacity?: number;
   color?: FigmaColor;
+  /** IMAGE fill에서 이미지를 식별하는 참조 키 */
+  imageRef?: string;
+  /** IMAGE fill의 스케일 모드 — object-fit 변환에 사용 */
+  scaleMode?: 'FILL' | 'FIT' | 'CROP' | 'TILE';
+  /** IMAGE fill의 이미지 변환 행렬 (CROP 모드에서 object-position 계산용) */
+  imageTransform?: number[][];
 }
 
 export interface Effect {
@@ -79,6 +85,9 @@ export interface FigmaAPINode {
   characters?: string;
   style?: TextStyle;
   componentId?: string;
+  /** 노드의 layoutSizing 모드 */
+  layoutSizingHorizontal?: 'FIXED' | 'HUG' | 'FILL';
+  layoutSizingVertical?: 'FIXED' | 'HUG' | 'FILL';
 }
 
 export interface FigmaFileResponse {
@@ -356,6 +365,22 @@ export interface CoverageReport {
     renderedValue: string;
   }>;
   recommendations: string[];
+}
+
+/** IMAGE fill export 결과 */
+export interface ImageFillExport {
+  /** Figma 노드 ID */
+  nodeId: string;
+  /** 노드 이름 */
+  nodeName: string;
+  /** IMAGE fill의 scaleMode */
+  scaleMode: 'FILL' | 'FIT' | 'CROP' | 'TILE';
+  /** export된 이미지 URL (Figma CDN) */
+  exportUrl: string;
+  /** 로컬에 저장된 파일 경로 */
+  savedPath: string;
+  /** 노드의 원본 크기 */
+  size: { width: number; height: number };
 }
 
 export interface PipelineOptions {

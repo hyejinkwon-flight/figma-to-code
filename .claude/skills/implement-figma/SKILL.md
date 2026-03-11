@@ -62,11 +62,86 @@ mkdir -p "$CACHE_DIR"/{metadata,screenshots,design-context,variables,assets}
 | # | MCP 호출 | 캐시 경로 | 비고 |
 |---|----------|----------|------|
 | 1 | `get_metadata` | `metadata/{nodeId}.json` | 규모 판단: ≤50노드·depth≤5 → 소형, 그 외 → 대형 |
-| 2 | `get_screenshot` | `screenshots/{nodeId}.png` | |
+| 2 | `get_screenshot` | `screenshots/{nodeId}.png` | ⚠️ 아래 저장 절차 필수 |
 | 3 | `get_design_context` | `design-context/{nodeId}.json` | 소형: 1회, 대형: 경계 노드별 개별 호출 |
 | 4 | `get_code_connect_map` | `code-connect.json` | 파일 단위 1회 |
 | 5 | `get_variable_defs` | `variables/{nodeId}.json` | |
-| 6 | `getImages` (SVG/PNG) | `assets/{nodeId}.{format}` | VECTOR/BOOLEAN_OP/INSTANCE(아이콘)/IMAGE fill |
+| 6 | `getImages` (SVG) | `assets/{nodeId}.svg` | VECTOR/BOOLEAN_OP/INSTANCE(아이콘) |
+| 7 | `export_images` (PNG) | `assets/{nodeId}.png` | **IMAGE fill** (사진/배경/일러스트) — 아래 참조 |
+
+#### IMAGE fill 래스터 이미지 export
+
+IMAGE fill이 있는 노드는 SVG와 다르게 처리한다. 아래 2단계로 진행한다.
+
+**Step A: IMAGE fill 노드 식별**
+
+`get_design_context` 또는 `get_metadata` 캐시에서 아래 조건에 해당하는 노드를 모두 수집한다:
+
+```
+IMAGE fill 판별 기준:
+  node.fills 배열을 순회
+    ├─ fill.type === "IMAGE"  → IMAGE fill 노드
+    ├─ fill.type === "SOLID"  → 일반 배경색 (대상 아님)
+    └─ fill.type === "GRADIENT_*" → 그라데이션 (대상 아님)
+
+대상 노드 유형 (모두 fills를 확인):
+  - FRAME / RECTANGLE: 배경 이미지
+  - INSTANCE: 이미지 카드, 썸네일 등
+  - COMPONENT: 이미지 슬롯
+```
+
+캐시된 design-context JSON에서 `"type": "IMAGE"`를 검색하면 빠르게 찾을 수 있다:
+```bash
+grep -l '"type": "IMAGE"' /tmp/figma-cache/${FILE_KEY}/design-context/*.json
+```
+
+**Step B: export_images 도구 호출**
+
+수집된 nodeId 목록을 `export_images`에 전달한다:
+
+```json
+{
+  "file_key": "{fileKey}",
+  "node_ids": ["{Step A에서 수집한 nodeId들}"],
+  "output_dir": "{프로젝트 에셋 경로}/images",
+  "scale": 2
+}
+```
+
+또는 `design_context_json`에 캐시된 JSON을 직접 전달하면 자동 감지한다:
+```json
+{
+  "file_key": "{fileKey}",
+  "design_context_json": [{"nodeId": "1:23", "data": {...}}, ...],
+  "output_dir": "{프로젝트 에셋 경로}/images"
+}
+```
+
+`export_images`는 Figma REST API로 PNG export → 바이너리 다운로드 → 파일 저장을 한 번에 수행한다.
+
+반환값에 `scaleMode`가 포함되므로 코드에서 `object-fit` 매핑에 활용한다:
+- `FILL` → `object-cover`, `FIT` → `object-contain`, `CROP` → `object-cover` + `object-position`
+
+⛔ IMAGE fill을 `get_screenshot`으로 대체하거나, 외부 URL/placeholder로 대체하지 않는다
+⛔ IMAGE fill 노드가 1개라도 있으면 export를 건너뛰지 않는다
+
+#### ⚠️ get_screenshot 결과 저장 방법
+
+`get_screenshot`은 base64 인코딩된 이미지를 반환한다. **응답 객체를 그대로 파일에 쓰면 JSON 텍스트가 저장되므로 반드시 아래 절차를 따른다:**
+
+1. `get_screenshot` 호출 → 응답에서 base64 이미지 데이터 추출
+2. base64 디코딩하여 바이너리 PNG로 저장:
+```bash
+echo "<base64_data>" | base64 -d > "$CACHE_DIR/screenshots/{nodeId}.png"
+```
+3. 저장 후 파일 형식 검증:
+```bash
+file "$CACHE_DIR/screenshots/{nodeId}.png"
+# 정상: PNG image data, ...
+# 비정상: JSON data, ASCII text 등 → 저장 실패, 다시 시도
+```
+
+⛔ `file` 결과가 `PNG image data`가 아니면 저장에 실패한 것이다. 반드시 재시도한다.
 
 ### 1-2. 컴포넌트 분석
 
@@ -154,7 +229,9 @@ unique: 위에 해당하지 않음
 
 1. Phase 1-1과 동일한 데이터 수집 (메타데이터/스크린샷/디자인 컨텍스트/에셋)
 2. Phase 1-2와 동일한 컴포넌트 분석 (매칭/diff/shared 판정)
-3. **SVG/이미지 에셋 export** (⛔ 생략 금지) — VECTOR/BOOLEAN_OP/INSTANCE(아이콘)/IMAGE fill 모두 식별 → `getImages` export → 프로젝트 에셋 디렉토리에 파일 저장
+3. **에셋 export** (⛔ 생략 금지):
+   - **SVG** (VECTOR/BOOLEAN_OP/INSTANCE 아이콘): `getImages(format: 'svg')` → SVG 파일 저장
+   - **IMAGE fill** (사진/배경/일러스트): `export_images` 도구 호출 → PNG 바이너리 저장. `scaleMode` → `object-fit` 매핑 적용
 4. 구현 실행: 토큰 → 컴포넌트(action별 분기) → 페이지 조립
 
 → **rules.md "속성 1:1 매핑" 섹션의 변환 규칙을 반드시 따른다.**

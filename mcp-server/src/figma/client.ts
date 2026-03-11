@@ -105,6 +105,18 @@ export class FigmaClient {
     return res.text();
   }
 
+  /** export URL에서 바이너리 이미지(PNG/JPG)를 다운로드한다 */
+  async downloadImage(exportUrl: string): Promise<Buffer> {
+    const res = await fetch(exportUrl);
+
+    if (!res.ok) {
+      throw new Error(`Image download failed ${res.status}: ${exportUrl}`);
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  }
+
   /** nodeIds에 대해 SVG export → 다운로드 → 콘텐츠 반환을 한 번에 수행한다 */
   async exportAndDownloadSvgs(
     fileKey: string,
@@ -117,6 +129,28 @@ export class FigmaClient {
     const downloads = entries.map(async ([nodeId, url]) => {
       const content = await this.downloadSvg(url);
       result[nodeId] = { url, content };
+    });
+
+    await Promise.all(downloads);
+    return result;
+  }
+
+  /** nodeIds에 대해 PNG export → 다운로드 → Buffer 반환을 한 번에 수행한다 */
+  async exportAndDownloadPngs(
+    fileKey: string,
+    nodeIds: string[],
+    options?: { scale?: number }
+  ): Promise<Record<string, { url: string; buffer: Buffer }>> {
+    const imageUrls = await this.getImages(fileKey, nodeIds, {
+      format: 'png',
+      scale: options?.scale ?? 2,
+    });
+    const result: Record<string, { url: string; buffer: Buffer }> = {};
+
+    const entries = Object.entries(imageUrls).filter(([, url]) => url != null);
+    const downloads = entries.map(async ([nodeId, url]) => {
+      const buffer = await this.downloadImage(url);
+      result[nodeId] = { url, buffer };
     });
 
     await Promise.all(downloads);
