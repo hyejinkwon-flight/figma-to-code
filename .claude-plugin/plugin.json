@@ -5,5 +5,6 @@
 	"author": {
 		"name": "hyejin-kwon"
 	},
+	"skills": "./.claude/skills/",
 	"repository": "https://github.com/hyejinkwon-flight/figma-to-code"
 }
