@@ -6,5 +6,6 @@
 		"name": "hyejin-kwon"
 	},
 	"skills": "./.claude/skills/",
+	"hooks": "./.claude/settings.json",
 	"repository": "https://github.com/hyejinkwon-flight/figma-to-code"
 }
