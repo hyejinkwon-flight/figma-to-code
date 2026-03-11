@@ -1,0 +1,14 @@
+{
+	"hooks": {
+		"SessionStart": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "test -f .figma-to-code && test ! -d .claude/skills/implement-figma && echo 'figmaToCode 초기 설정이 필요합니다. /figmaToCode:setup 을 실행하세요.'"
+					}
+				]
+			}
+		]
+	}
+}
