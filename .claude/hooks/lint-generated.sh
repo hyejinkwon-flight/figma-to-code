@@ -75,11 +75,35 @@ if [ -n "$PLACEHOLDER_MATCHES" ]; then
   VIOLATIONS+=("$PLACEHOLDER_MATCHES")
 fi
 
-# Rule 6: CSS로 아이콘 흉내 검사 (border로 화살표 등)
-CSS_ICON_MATCHES=$(grep -n 'border-[rtbl].*rotate\|transform.*rotate.*border\|border-r-2.*border-b-2.*rotate' "$FILE_PATH" 2>/dev/null || true)
-if [ -n "$CSS_ICON_MATCHES" ]; then
-  VIOLATIONS+=("❌ [no-css-icon] CSS border로 아이콘을 흉내내지 마세요 — Figma export SVG를 사용하세요:")
-  VIOLATIONS+=("$CSS_ICON_MATCHES")
+# Rule 6: CSS로 아이콘/도형 흉내 검사
+# 6a: border + rotate로 화살표 흉내
+CSS_ICON_ARROW=$(grep -n 'border-[rtbl].*rotate\|transform.*rotate.*border\|border-r-2.*border-b-2.*rotate' "$FILE_PATH" 2>/dev/null || true)
+if [ -n "$CSS_ICON_ARROW" ]; then
+  VIOLATIONS+=("❌ [no-css-icon] CSS border+rotate로 아이콘을 흉내내지 마세요 — Figma export SVG를 사용하세요:")
+  VIOLATIONS+=("$CSS_ICON_ARROW")
+fi
+
+# 6b: 작은 rounded-full + bg-color로 원형 아이콘/도트 흉내
+# w-1~w-6 (단독 토큰) + rounded-full + bg- 조합 검출
+# w-10, w-12 등 큰 크기는 아이콘 흉내가 아니므로 제외
+CSS_ICON_DOT=$(grep -En '(w-[1-6][^0-9]|w-\[[0-9]+(px|rem)\]).*rounded-full.*bg-|rounded-full.*(w-[1-6][^0-9]|w-\[[0-9]+(px|rem)\]).*bg-|bg-.*rounded-full.*(w-[1-6][^0-9]|w-\[[0-9]+(px|rem)\])' "$FILE_PATH" 2>/dev/null | grep -v 'avatar\|profile\|thumb\|logo\|img' || true)
+if [ -n "$CSS_ICON_DOT" ]; then
+  VIOLATIONS+=("❌ [no-css-icon-dot] 작은 rounded-full + bg 조합으로 아이콘/도형을 흉내내지 마세요 — Figma export SVG를 사용하세요:")
+  VIOLATIONS+=("$CSS_ICON_DOT")
+fi
+
+# 6c: border-transparent로 삼각형 흉내
+CSS_ICON_TRIANGLE=$(grep -n 'border-transparent' "$FILE_PATH" 2>/dev/null || true)
+if [ -n "$CSS_ICON_TRIANGLE" ]; then
+  VIOLATIONS+=("❌ [no-css-icon-triangle] CSS border-transparent로 삼각형을 흉내내지 마세요 — Figma export SVG를 사용하세요:")
+  VIOLATIONS+=("$CSS_ICON_TRIANGLE")
+fi
+
+# 6d: clip-path로 도형 흉내
+CSS_ICON_CLIP=$(grep -n 'clip-path\|clipPath' "$FILE_PATH" 2>/dev/null | grep -v 'import\|require\|\.svg' || true)
+if [ -n "$CSS_ICON_CLIP" ]; then
+  VIOLATIONS+=("❌ [no-css-icon-clip] clip-path로 도형을 흉내내지 마세요 — Figma export SVG를 사용하세요:")
+  VIOLATIONS+=("$CSS_ICON_CLIP")
 fi
 
 # Rule 7: <img> 태그에 alt 속성 누락 검사

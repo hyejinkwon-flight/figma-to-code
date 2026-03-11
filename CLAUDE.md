@@ -38,8 +38,9 @@ figma-to-code/
 │   ├── skills/
 │   │   ├── implement-figma/       # /implement-figma 스킬
 │   │   │   ├── SKILL.md           #   실행 프로세스 (Phase 0→1→2→3)
-│   │   │   ├── rules.md           #   변환 규칙 + 매니페스트 스키마 + 캐시 전략
+│   │   │   ├── rules.md           #   변환 규칙 + 캐시 전략
 │   │   │   ├── rules-component.md #   컴포넌트 분해/합성 규칙 (Atomic 3레벨, 합성 방식 5종, Figma 시그널 매핑)
+│   │   │   ├── rules-parallel.md  #   병렬 구현 규칙 (매니페스트 스키마, 팀 조정, Merge)
 │   │   │   └── config.md          #   프로젝트별 설정 (사용자 편집)
 │   │   └── verify-figma/          # /verify-figma 스킬
 │   │       ├── SKILL.md           #   검증 프로세스 (Phase V0→V7)

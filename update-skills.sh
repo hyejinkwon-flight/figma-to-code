@@ -7,7 +7,9 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SOURCE_SKILLS="$SCRIPT_DIR/.claude/skills"
+SOURCE_HOOKS="$SCRIPT_DIR/.claude/hooks"
 TARGET_DIR="$(pwd)/.claude/skills"
+TARGET_HOOKS="$(pwd)/.claude/hooks"
 
 echo "============================================"
 echo "Figma → Code 스킬 업데이트"
@@ -28,10 +30,23 @@ cp "$SOURCE_SKILLS/implement-figma/rules.md" "$TARGET_DIR/implement-figma/rules.
 echo "      SKILL.md ✓  rules.md ✓  config.md (보존)"
 
 # verify-figma 업데이트
-echo "[2/2] verify-figma 업데이트 중..."
+echo "[2/3] verify-figma 업데이트 중..."
 cp "$SOURCE_SKILLS/verify-figma/SKILL.md" "$TARGET_DIR/verify-figma/SKILL.md"
 cp "$SOURCE_SKILLS/verify-figma/rules.md" "$TARGET_DIR/verify-figma/rules.md"
 echo "      SKILL.md ✓  rules.md ✓  config.md (보존)"
+
+# hooks 업데이트
+echo "[3/3] hooks 업데이트 중..."
+mkdir -p "$TARGET_HOOKS"
+if [ -d "$SOURCE_HOOKS" ]; then
+  for hook_file in "$SOURCE_HOOKS"/*.sh; do
+    if [ -f "$hook_file" ]; then
+      cp "$hook_file" "$TARGET_HOOKS/$(basename "$hook_file")"
+      chmod +x "$TARGET_HOOKS/$(basename "$hook_file")"
+      echo "      $(basename "$hook_file") ✓"
+    fi
+  done
+fi
 
 echo ""
 echo "============================================"
