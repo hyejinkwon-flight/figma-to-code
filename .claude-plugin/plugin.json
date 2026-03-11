@@ -1,0 +1,10 @@
+{
+	"name": "figma-to-code",
+	"version": "1.0.0",
+	"description": "figma to react component",
+	"author": {
+		"name": "hyejin-kwon"
+	},
+	"skills": "./.claude/skills/",
+	"repository": "https://github.com/hyejinkwon-flight/figma-to-code"
+}
