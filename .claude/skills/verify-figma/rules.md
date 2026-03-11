@@ -3,19 +3,31 @@
 이 파일은 공통 검증 규칙입니다. 업데이트 시 덮어쓰기됩니다.
 프로젝트별 커스터마이징은 config.md에서 합니다.
 
+## 목차
+
+1. [⛔ 절대 규칙](#-절대-규칙)
+2. [Figma MCP 캐시 규칙](#figma-mcp-캐시-규칙)
+3. [렌더링 검증 원칙](#렌더링-검증-원칙)
+4. [요소 단위 검증](#요소-단위-검증)
+5. [콘텐츠 검증](#콘텐츠-검증)
+6. [SVG/에셋 검증](#svg에셋-검증)
+7. [레이아웃 검증](#레이아웃-검증)
+8. [코드 레벨 검증](#코드-레벨-검증)
+
+---
+
 ## ⛔ 절대 규칙
 
-1. 정확도 99% 미만에서 검증을 종료하지 않는다
-2. 코드만 보고 "시각적으로 일치한다"고 판정하지 않는다 — 렌더링 스크린샷이 최종 판단 기준이다
-3. 렌더링 스크린샷 없이 시각적 검증을 통과시키지 않는다
-4. 노드 단위로 뭉뚱그려 검증하지 않는다 — 모든 UI 요소를 개별 나열한다
-5. 추출 데이터를 자기 자신과 비교하여 검증하지 않는다
-6. Figma 스크린샷은 Figma MCP `get_screenshot`으로 자동 캡처한다 (수동 불가)
-7. 99% 미만이면 모든 fail을 수정하고 재검증한다 — 일부만 수정하고 건너뛰지 않는다
+→ **SKILL.md의 "⛔ 절대 규칙" 섹션이 원본이다.** 여기서는 검증 규칙 관점에서 요약만 한다.
+
+핵심 3원칙:
+- **렌더링이 진실이다** — 코드가 아닌 실제 렌더링 스크린샷이 최종 판단 기준. 코드에 올바른 값이 있어도 렌더링이 다르면 fail이다.
+- **요소 단위로 센다** — 노드 단위 뭉뚱그림은 작은 요소의 누락을 감추므로, 모든 UI 요소를 개별 나열하여 정확도를 계산한다.
+- **99%까지 자동 수정** — 일부만 수정하고 건너뛰지 않는다. 수정 불가 항목만 분모에서 제외한다 (SKILL.md "수정 불가 판정" 참조).
 
 ## Figma MCP 캐시 규칙
 
-Figma 원본은 세션 내 불변이다. 캐시 히트 시 MCP를 재호출하지 않는다.
+Figma 원본은 세션 내 불변이다. 캐시 히트 시 MCP를 재호출하지 않는다 — 검증 루프가 여러 라운드 돌면 같은 노드를 반복 조회하게 되므로, 캐시 없이는 API rate limit을 빠르게 소진한다.
 
 | 규칙 | 설명 |
 |------|------|
@@ -250,39 +262,42 @@ hook `lint-generated.sh`가 자동 검출하는 항목:
 
 ## 코드 레벨 검증
 
-### 자동 검증 (코드 작성 시 hook이 실행)
+### PostToolUse 자동 검증 (Write/Edit 시마다 즉시 실행)
 
-`lint-generated.sh` (PostToolUse hook)가 아래를 자동 검출:
+`lint-generated.sh` hook이 코드 저장 시 자동 검출한다. 캐시(`/tmp/figma-cache/`)가 존재하면 Figma 속성값 대조까지 수행한다.
 
-| Rule | 검사 내용 |
-|------|----------|
-| 1 | hex/rgb 하드코딩 |
-| 2 | inline SVG 직접 작성 |
-| 3 | 아이콘 라이브러리 import |
-| 4 | 외부 placeholder 이미지 URL |
-| 5 | placeholder 텍스트 |
-| 6 | CSS border로 아이콘 흉내 |
-| 7 | `<img>` alt 속성 누락 |
-| 8 | line-clamp에 overflow-hidden 동반 |
-| 9 | 인라인 style px 하드코딩 |
-| 10 | `<img>` 고정 w/h에 object-fit 누락 |
-| 11 | fills 기반 요소에 border-dashed/dotted 혼용 |
-| 12 | SVG `<img>`에 크기(w-/h-) 누락 |
+**패턴 검사 (Rule 1~12)** — 캐시 없이도 항상 실행:
 
-### 캐시 대조 검증 (verify Phase V3에서 실행)
+| Rule | 검사 내용 | 결과 |
+|------|----------|------|
+| 1 | hex/rgb 하드코딩 | ❌ 차단 |
+| 2 | inline SVG 직접 작성 | ❌ 차단 |
+| 3 | 아이콘 라이브러리 import | ❌ 차단 |
+| 4 | 외부 placeholder 이미지 URL | ❌ 차단 |
+| 5 | placeholder 텍스트 | ❌ 차단 |
+| 6 | CSS border로 아이콘 흉내 | ❌ 차단 |
+| 7 | `<img>` alt 속성 누락 | ❌ 차단 |
+| 8 | line-clamp에 overflow-hidden 동반 | ❌ 차단 |
+| 9 | 인라인 style px 하드코딩 | ⚠️ 경고 |
+| 10 | `<img>` 고정 w/h에 object-fit 누락 | ⚠️ 경고 |
+| 11 | fills 기반 요소에 border-dashed/dotted 혼용 | ⚠️ 경고 |
+| 12 | SVG `<img>`에 크기(w-/h-) 누락 | ⚠️ 경고 |
 
-`verify-figma-props.sh <code-file> <cache-dir> [nodeIds...]`가 아래를 자동 검출:
+**캐시 기반 속성 대조 (Rule 13a~k)** — 캐시 존재 시에만 실행:
 
-| 검사 | 대조 데이터 |
-|------|-----------|
-| padding 누락/불일치 | design-context `paddingLeft/Right/Top/Bottom` |
-| gap 누락/불일치 | design-context `itemSpacing` |
-| flex-direction 불일치 | design-context `layoutMode` |
-| border-style 불일치 | design-context `strokeDashes` + `strokes`/`fills` |
-| rotation 미적용 | design-context `rotation` |
-| overflow-hidden 누락 | design-context `clipsContent` |
-| layoutSizing 불일치 | design-context `layoutSizingHorizontal/Vertical` |
-| SVG fill 색상 불일치 | design-context `fills` + SVG 파일 fill 속성 |
+| Rule | Figma 속성 → 코드 대조 | 결과 |
+|------|----------------------|------|
+| 13a | TEXT `fontSize` → `text-*` 클래스 | ❌ 차단 |
+| 13b | TEXT `fontWeight` → `font-*` 클래스 | ⚠️ 경고 |
+| 13c | TEXT `fills` 색상 → `text-{color}` | ⚠️ 경고 |
+| 13d | 아이콘 `width/height` → 크기 클래스 | ⚠️ 경고 |
+| 13e | `paddingLeft/Top` → `p-`/`px-`/`pl-`/`pt-` | ⚠️ 경고 |
+| 13f | `itemSpacing` → `gap-` | ⚠️ 경고 |
+| 13g | `layoutMode` VERTICAL → `flex-col` | ⚠️ 경고 |
+| 13h | `rotation` → `rotate-` | ⚠️ 경고 |
+| 13i | `clipsContent` → `overflow-hidden` | ⚠️ 경고 |
+| 13j | `layoutSizingH/V` FILL → `flex-1`/`w-full`/`h-full` | ⚠️ 경고 |
+| 13k | `strokeDashes` + `strokes`/`fills` → border-style | ⚠️ 경고 |
 
 ### 빌드/타입 검증
 

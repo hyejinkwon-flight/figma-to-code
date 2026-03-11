@@ -1,6 +1,6 @@
 ---
 name: implement-figma
-description: figma-targets.md 기반으로 Figma 디자인을 React 코드로 구현합니다. Use when user says "/implement-figma", "피그마 구현", "디자인 구현해줘", "figma-targets 실행", or wants to run the full Figma-to-code pipeline with component matching, manifest generation, and parallel agent execution. Requires figma-targets.md in project root.
+description: Full pipeline to convert Figma designs into React code using figma-targets.md. Use when user says "/implement-figma", "피그마 구현", "디자인 구현해줘", "figma-targets 실행", "코드로 만들어줘", "컴포넌트 만들어줘", or wants to build React components from Figma designs. Also trigger when the user shares a Figma URL and asks to implement, build, or create components from it, or discusses converting design specs to code — even without explicitly mentioning "Figma".
 ---
 
 # Figma 디자인 구현 스킬
@@ -155,7 +155,9 @@ unique: 위에 해당하지 않음
 1. Phase 1-1과 동일한 데이터 수집 (메타데이터/스크린샷/디자인 컨텍스트/에셋)
 2. Phase 1-2와 동일한 컴포넌트 분석 (매칭/diff/shared 판정)
 3. **SVG/이미지 에셋 export** (⛔ 생략 금지) — VECTOR/BOOLEAN_OP/INSTANCE(아이콘)/IMAGE fill 모두 식별 → `getImages` export → 프로젝트 에셋 디렉토리에 파일 저장
-4. 구현 실행: 토큰 → 컴포넌트(action별 분기) → 페이지 조립 (rules.md 규칙 준수)
+4. 구현 실행: 토큰 → 컴포넌트(action별 분기) → 페이지 조립
+
+→ **rules.md "속성 1:1 매핑" 섹션의 변환 규칙을 반드시 따른다.**
 
 완료 후 `/verify-figma` 안내.
 
@@ -187,7 +189,9 @@ designTokens.new → config.md의 styles 경로에 추가 (중복 가능 — mer
 
 ### Step 2: 할당된 컴포넌트 생성 (action별 분기)
 
-**source: "new"** → 캐시에서 디자인 컨텍스트/스크린샷/에셋 확보 → rules.md 준수하여 생성
+→ **rules.md "속성 1:1 매핑" 섹션의 변환 규칙을 반드시 따른다.**
+
+**source: "new"** → 캐시에서 디자인 컨텍스트/스크린샷/에셋 확보 → 위 규칙 준수하여 생성
   - SVG/이미지 에셋 생략 금지, JSX에 <svg>/<path> 직접 작성 금지
 
 **source: "existing", action: "reuse"**

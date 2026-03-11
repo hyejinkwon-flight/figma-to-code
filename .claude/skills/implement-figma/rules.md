@@ -3,17 +3,36 @@
 이 파일은 공통 변환 규칙입니다. 업데이트 시 덮어쓰기됩니다.
 프로젝트별 커스터마이징은 config.md에서 합니다.
 
+## 목차
+
+1. [⛔ 절대 규칙](#-절대-규칙)
+2. [Figma MCP 캐시 전략](#figma-mcp-캐시-전략)
+3. [MCP 호출 흐름](#mcp-호출-흐름)
+4. [탐색 전략](#탐색-전략)
+5. [속성 1:1 매핑](#속성-11-매핑)
+6. [콘텐츠 충실도](#콘텐츠-충실도)
+7. [코드 변환](#코드-변환)
+8. [시각적 요소 변환](#시각적-요소-변환)
+9. [SVG/아이콘 에셋](#svg아이콘-에셋)
+10. [텍스트 속성 변환](#텍스트-속성-변환)
+11. [레이아웃 속성](#레이아웃-속성)
+12. [디자인 토큰](#디자인-토큰)
+13. [코드 레벨 자동 검출](#코드-레벨-자동-검출)
+
+---
+
 ## ⛔ 절대 규칙
 
-1. 디자인 컨텍스트(`get_design_context`) 없이 추측으로 구현하지 않는다
-2. 스크린샷 비교 없이 섹션 구현을 완료 처리하지 않는다
-3. SVG/이미지 에셋은 반드시 Figma REST API로 export한다 — 추측 생성, 아이콘 라이브러리 대체, CSS 흉내 금지
-4. Figma 텍스트를 임의로 변경하거나 placeholder로 대체하지 않는다
-5. 스크린샷에서 "~처럼 보인다"로 CSS를 결정하지 않는다 — 반드시 `get_design_context` 속성값을 기준으로 변환한다
+1. 디자인 컨텍스트(`get_design_context`) 없이 추측으로 구현하지 않는다 — 스크린샷은 해상도/색상 프로파일에 따라 부정확할 수 있으므로, 구조화된 API 데이터가 유일한 신뢰 가능 소스이다
+2. 스크린샷 비교 없이 섹션 구현을 완료 처리하지 않는다 — 코드에 올바른 값이 있어도 렌더링 결과가 다를 수 있으므로, 시각적 확인이 품질 보증의 마지막 관문이다
+3. SVG/이미지 에셋은 반드시 Figma REST API로 export한다 — 추측 생성이나 아이콘 라이브러리 대체는 디자이너의 의도와 다른 결과를 만들고, CSS 흉내는 해상도/접근성에서 문제를 일으킨다
+4. Figma 텍스트를 임의로 변경하거나 placeholder로 대체하지 않는다 — 텍스트는 디자인의 일부이고, 임의 변경은 디자이너/기획자의 검수 비용을 증가시킨다
+5. 스크린샷에서 "~처럼 보인다"로 CSS를 결정하지 않는다 — 반드시 `get_design_context` 속성값을 기준으로 변환한다. 시각적 추론은 1~2px 오차로 축적되어 전체 레이아웃을 무너뜨린다
+6. 불확실할 때 가정하지 않고 원본을 확인한다 — 속성값, 색상, 크기, 간격 등 어떤 값이든 확신이 없으면 `get_design_context`/`get_metadata`/캐시를 다시 조회한다. "아마 이 값일 것이다"라는 추측은 디버깅이 어려운 미세한 오차를 만든다
 
 ## Figma MCP 캐시 전략
 
-Figma 원본은 세션 내에서 변하지 않는다. **동일 nodeId에 대한 MCP 호출은 1회만 실행하고 캐시를 재사용**한다.
+Figma 원본은 세션 내에서 변하지 않는다. **동일 nodeId에 대한 MCP 호출은 1회만 실행하고 캐시를 재사용**한다. 이유: MCP 호출마다 네트워크 왕복 + Figma API rate limit을 소비하고, 디자인 원본이 세션 중 변하지 않으므로 재호출은 순수한 낭비이다.
 
 ### 캐시 위치
 
@@ -105,6 +124,20 @@ MCP 호출 전
 1. `get_metadata` 결과(캐시)에서 children 확인 → 시각적 섹션 분할
 2. 각 섹션마다 `get_screenshot`(캐시 확인) → `get_design_context`(캐시 확인) → 잘렸으면 재귀 드릴다운
 3. 한 섹션 컨텍스트 확보 → 즉시 구현 → **캐시된 스크린샷으로** 비교 검증 → 다음 섹션으로
+
+## 속성 1:1 매핑
+
+SKILL.md에서 이 섹션을 참조한다. 각 요소의 캐시된 design-context 값을 그대로 적용하고 추측하지 않는다. 디자이너가 지정한 정확한 수치가 있는데 눈대중으로 결정하면 1~2px 오차가 축적되어 전체 레이아웃을 무너뜨리기 때문이다.
+
+| 요소 타입 | Figma 속성 | 변환 대상 | 비고 |
+|-----------|-----------|----------|------|
+| **TEXT** | `fontSize`, `fontWeight`, `lineHeightPx`, `letterSpacing`, `fills[0].color` | 텍스트 스타일 + 색상 | |
+| **FRAME** | `width`, `height`, `paddingLeft/Top/Right/Bottom`, `itemSpacing`, `layoutMode` | 레이아웃 | |
+| **아이콘** | `get_metadata`의 `absoluteBoundingBox.width/height` | 크기 | `get_design_context`의 비율 계산값과 다를 수 있음 |
+| **색상** | `fills`/`strokes` 원본값 | Tailwind 토큰 매핑 | 스크린샷에서 색상 추측 금지 |
+| **크기 모드** | `layoutSizingHorizontal/Vertical` | FIXED→명시적 크기, FILL→flex-1/w-full, HUG→크기 미지정 | |
+
+---
 
 ## 콘텐츠 충실도
 
@@ -515,19 +548,17 @@ min/max 속성 생략 시 반응형 동작이 깨진다.
 | 10 | `<img>` w/h 고정인데 object-fit 없음 | ⚠️ 경고 |
 | 11 | bg-color + border-dashed/dotted 혼용 | ⚠️ 경고 |
 | 12 | SVG를 `<img>`로 사용하면서 크기 없음 | ⚠️ 경고 |
-
-### Script (verify-figma-props.sh) — 캐시 기반 속성 대조
-
-| Check | Figma 속성 → 코드 대조 |
-|-------|----------------------|
-| 1 | `paddingLeft/Top` → `p-`/`px-`/`pl-`/`pt-` |
-| 2 | `itemSpacing` → `gap-` |
-| 3 | `layoutMode` → `flex-row`/`flex-col` |
-| 4 | `strokeDashes` + `strokes`/`fills` → border-style |
-| 5 | `rotation` → `rotate-` |
-| 6 | `clipsContent` → `overflow-hidden` |
-| 7 | `layoutSizingH/V` → `flex-1`/`w-full`/`h-full` |
-| 8 | SVG fill 색상 → `<img>` vs 인라인 SVG 판정 |
+| 13a | 캐시 TEXT `fontSize` → `text-*` | ❌ 차단 |
+| 13b | 캐시 TEXT `fontWeight` → `font-*` | ⚠️ 경고 |
+| 13c | 캐시 TEXT `fills` 색상 → `text-{color}` | ⚠️ 경고 |
+| 13d | 캐시 아이콘 `width/height` → 크기 클래스 | ⚠️ 경고 |
+| 13e | 캐시 `paddingLeft/Top` → `p-`/`px-`/`pl-`/`pt-` | ⚠️ 경고 |
+| 13f | 캐시 `itemSpacing` → `gap-` | ⚠️ 경고 |
+| 13g | 캐시 `layoutMode` VERTICAL → `flex-col` | ⚠️ 경고 |
+| 13h | 캐시 `rotation` → `rotate-` | ⚠️ 경고 |
+| 13i | 캐시 `clipsContent` → `overflow-hidden` | ⚠️ 경고 |
+| 13j | 캐시 `layoutSizingH/V` FILL → `flex-1`/`w-full`/`h-full` | ⚠️ 경고 |
+| 13k | 캐시 `strokeDashes` + `strokes`/`fills` → border-style | ⚠️ 경고 |
 
 ---
 
